@@ -19,32 +19,45 @@ API REST para gerenciamento de frutas, construída com **FastAPI**, **SQLAlchemy
 ## 🗂️ Estrutura do Projeto
 
 ```
-fruits_api/
-├── app/
-│   ├── main.py                    # Entry point, lifespan, middlewares
-│   ├── core/
-│   │   ├── config.py              # Settings via pydantic-settings + .env
-│   │   ├── database.py            # Engine, SessionLocal, Base, get_db
-│   │   └── exceptions.py          # HTTPExceptions de domínio
-│   ├── models/
-│   │   └── fruit.py               # Model SQLAlchemy (Mapped / mapped_column)
-│   ├── schemas/
-│   │   └── fruit.py               # Pydantic v2: Create, Update, Response, List
-│   ├── services/
-│   │   └── fruit_service.py       # Lógica de negócio e acesso ao banco
-│   └── api/v1/routers/
-│       └── fruit.py               # Endpoints FastAPI
-├── alembic/
-│   ├── env.py                     # Lê DATABASE_URL do .env
-│   ├── script.py.mako
-│   └── versions/                  # Migrations geradas
-├── tests/
-│   ├── conftest.py                # Fixtures: client + banco em memória
-│   └── test_fruits.py             # Testes de todos os endpoints
-├── alembic.ini
-├── requirements.txt
+├── alembic
+│   ├── versions
+│   │   └── 79dee2c61eb6_create_fruits_table.py
+│   ├── env.py
+│   └── script.py.mako
+├── app
+│   ├── api
+│   │   ├── v1
+│   │   │   ├── routers
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── fruit.py
+│   │   │   └── __init__.py
+│   │   └── __init__.py
+│   ├── core
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   └── exceptions.py
+│   ├── models
+│   │   ├── __init__.py
+│   │   └── fruit.py
+│   ├── schemas
+│   │   ├── __init__.py
+│   │   └── fruit.py
+│   ├── services
+│   │   ├── __init__.py
+│   │   └── fruit_service.py
+│   ├── __init__.py
+│   └── main.py
+├── tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   └── test_fruits.py
 ├── .env.example
-└── .gitignore
+├── .gitignore
+├── README.md
+├── alembic.ini
+├── pyproject.toml
+└── requirements.txt
 ```
 
 ---
