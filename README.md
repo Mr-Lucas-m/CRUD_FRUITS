@@ -75,7 +75,7 @@ crud_fruits/
 ### 1. Clone o repositório
 
 ```bash
-git clone <seu-repo>
+git clone https://github.com/Mr-Lucas-m/CRUD_FRUITS.git
 cd crud_fruits
 ```
 
