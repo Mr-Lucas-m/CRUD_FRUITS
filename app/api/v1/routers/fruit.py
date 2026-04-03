@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.schemas.fruit import FruitCreate, FruitListResponse, FruitResponse, FruitUpdate
-from app.services import fruit_service
+from app.repositories import fruit_repository
 
 router = APIRouter(prefix="/fruits", tags=["Frutas"])
 
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/fruits", tags=["Frutas"])
 )
 def create(data: FruitCreate, db: Session = Depends(get_db)) -> FruitResponse:
     """Cadastra uma nova fruta. O nome é único e obrigatório."""
-    return fruit_service.create_fruit(db, data)
+    return fruit_repository.create_fruit(db, data)
 
 
 # ── GET /fruits
@@ -34,7 +34,7 @@ def list_all(
     db: Session = Depends(get_db),
 ) -> FruitListResponse:
     """Retorna lista paginada de frutas, com filtro opcional por nome."""
-    return fruit_service.list_fruits(db, page=page, page_size=page_size, nome_filtro=nome)
+    return fruit_repository.list_fruits(db, page=page, page_size=page_size, nome_filtro=nome)
 
 
 # ── GET /fruits/{id}
@@ -44,7 +44,7 @@ def list_all(
     summary="Buscar fruta por ID",
 )
 def get_one(fruit_id: str, db: Session = Depends(get_db)) -> FruitResponse:
-    return fruit_service.get_fruit(db, fruit_id)
+    return fruit_repository.get_fruit(db, fruit_id)
 
 
 # ── PATCH /fruits/{id}
@@ -55,7 +55,7 @@ def get_one(fruit_id: str, db: Session = Depends(get_db)) -> FruitResponse:
 )
 def update(fruit_id: str, data: FruitUpdate, db: Session = Depends(get_db)) -> FruitResponse:
     """Atualiza apenas os campos enviados no body."""
-    return fruit_service.update_fruit(db, fruit_id, data)
+    return fruit_repository.update_fruit(db, fruit_id, data)
 
 
 # ── DELETE /fruits/{id}
@@ -65,4 +65,4 @@ def update(fruit_id: str, data: FruitUpdate, db: Session = Depends(get_db)) -> F
     summary="Remover fruta",
 )
 def delete(fruit_id: str, db: Session = Depends(get_db)) -> None:
-    fruit_service.delete_fruit(db, fruit_id)
+    fruit_repository.delete_fruit(db, fruit_id)
