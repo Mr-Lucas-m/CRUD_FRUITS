@@ -1,4 +1,4 @@
-# Fruits API
+# 🍎 Fruits API
 
 API REST para gerenciamento de frutas com autenticação JWT, controle de estoque, categorias e soft delete — construída com **FastAPI**, **SQLAlchemy 2**, **Alembic** e **PostgreSQL**.
 
