@@ -3,17 +3,13 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-# ── Importa settings e Base ANTES de qualquer outro import de model ────────────
 from app.core.config import settings
 from app.core.database import Base
 
 # Importa todos os models para que o Alembic detecte as tabelas
-from app.models import fruit  # noqa: F401
+from app.models import category, fruit, stock_movement, user  # noqa: F401
 
-# ── Config do Alembic ─────────────────────────────────────────────────────────
 config = context.config
-
-# Injeta a URL lida do .env (sobrepõe o valor vazio do alembic.ini)
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 if config.config_file_name is not None:
@@ -22,7 +18,6 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
-# ── Offline mode ──────────────────────────────────────────────────────────────
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -36,7 +31,6 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-# ── Online mode ───────────────────────────────────────────────────────────────
 def run_migrations_online() -> None:
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),

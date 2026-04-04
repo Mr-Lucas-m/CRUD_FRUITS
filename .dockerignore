@@ -8,3 +8,9 @@ __pycache__/
 .ruff_cache/
 *.db
 *.sqlite3
+tests/
+.git/
+.gitignore
+CLAUDE.md
+memory/
+.claude/

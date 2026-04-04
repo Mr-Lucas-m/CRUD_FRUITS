@@ -24,14 +24,14 @@ services:
     restart: always
     env_file:
       - .env
+    environment:
+      # Sobrescreve o DATABASE_URL do .env para usar o host interno do Docker
+      DATABASE_URL: postgresql://fruits_user:fruits_pass@db:5432/fruits_db
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
-    command: >
-      sh -c "alembic upgrade head &&
-             uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
 volumes:
   postgres_data:
