@@ -1,12 +1,12 @@
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.stock_movement import StockMovement
 from app.schemas.stock import StockMovementListResponse, StockMovementResponse
 
 
 def create_movement(
-    db: Session,
+    db: AsyncSession,
     fruit_id: str,
     tipo: str,
     quantidade: int,
@@ -23,19 +23,20 @@ def create_movement(
     return movement
 
 
-def list_movements(
-    db: Session,
+async def list_movements(
+    db: AsyncSession,
     fruit_id: str,
     page: int,
     page_size: int,
 ) -> StockMovementListResponse:
     query = select(StockMovement).where(StockMovement.fruit_id == fruit_id)
-    total: int = db.scalar(select(func.count()).select_from(query.subquery())) or 0
-    movements = db.scalars(
+    total = await db.scalar(select(func.count()).select_from(query.subquery())) or 0
+    result = await db.scalars(
         query.order_by(StockMovement.data_movimento.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
-    ).all()
+    )
+    movements = result.all()
     return StockMovementListResponse(
         total=total,
         page=page,
@@ -44,8 +45,8 @@ def list_movements(
     )
 
 
-def get_last_movement(db: Session, fruit_id: str) -> StockMovement | None:
-    return db.scalar(
+async def get_last_movement(db: AsyncSession, fruit_id: str) -> StockMovement | None:
+    return await db.scalar(
         select(StockMovement)
         .where(StockMovement.fruit_id == fruit_id)
         .order_by(StockMovement.data_movimento.desc())

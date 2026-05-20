@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Request, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.limiter import limiter
@@ -17,8 +17,10 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
     summary="Registrar novo usuário",
 )
 @limiter.limit("30/minute")
-def register(request: Request, data: UserCreate, db: Session = Depends(get_db)) -> UserResponse:
-    return auth_service.register(db, data)
+async def register(
+    request: Request, data: UserCreate, db: AsyncSession = Depends(get_db)
+) -> UserResponse:
+    return await auth_service.register(db, data)
 
 
 # ── POST /auth/login
@@ -28,8 +30,10 @@ def register(request: Request, data: UserCreate, db: Session = Depends(get_db)) 
     summary="Login e obtenção de tokens",
 )
 @limiter.limit("10/minute")
-def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
-    return auth_service.login(db, data)
+async def login(
+    request: Request, data: LoginRequest, db: AsyncSession = Depends(get_db)
+) -> TokenResponse:
+    return await auth_service.login(db, data)
 
 
 # ── POST /auth/refresh
@@ -39,7 +43,7 @@ def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)) -
     summary="Renovar access token com refresh token",
 )
 @limiter.limit("30/minute")
-def refresh(
-    request: Request, data: RefreshRequest, db: Session = Depends(get_db)
+async def refresh(
+    request: Request, data: RefreshRequest, db: AsyncSession = Depends(get_db)
 ) -> TokenResponse:
-    return auth_service.refresh(db, data.refresh_token)
+    return await auth_service.refresh(db, data.refresh_token)

@@ -29,7 +29,7 @@ logger = structlog.get_logger()
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("startup", env=settings.APP_ENV, version=settings.APP_VERSION)
     yield
-    engine.dispose()
+    await engine.dispose()
     logger.info("shutdown")
 
 

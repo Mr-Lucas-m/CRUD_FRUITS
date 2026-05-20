@@ -1,54 +1,50 @@
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import settings
 
-# ── Engine ─────────────────────────────────────────────────────────────────────
+
+def _to_async_url(url: str) -> str:
+    """Converte URL de driver síncrono para o equivalente async."""
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if url.startswith("sqlite://"):
+        return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+    return url
+
+
+ASYNC_DATABASE_URL = _to_async_url(settings.DATABASE_URL)
+
 connect_args: dict = {}
-if "sqlite" in settings.DATABASE_URL:
-    # SQLite exige isso em ambiente multi-thread (ex.: uvicorn)
+if "sqlite" in ASYNC_DATABASE_URL:
     connect_args["check_same_thread"] = False
 
-engine = create_engine(
-    settings.DATABASE_URL,
+engine = create_async_engine(
+    ASYNC_DATABASE_URL,
     connect_args=connect_args,
-    pool_pre_ping=True,      # verifica conexão antes de reutilizar do pool
-    echo=settings.APP_DEBUG, # loga SQL apenas em modo debug
+    pool_pre_ping=True,
+    echo=settings.APP_DEBUG,
 )
 
-# Ativa WAL no SQLite para melhor concorrência de leitura/escrita
-if "sqlite" in settings.DATABASE_URL:
 
-    @event.listens_for(engine, "connect")
-    def set_sqlite_pragma(dbapi_conn, _connection_record) -> None:
-        cursor = dbapi_conn.cursor()
-        cursor.execute("PRAGMA journal_mode=WAL;")
-        cursor.close()
-
-
-# ── Session factory ────────────────────────────────────────────────────────────
-SessionLocal = sessionmaker(
+SessionLocal = async_sessionmaker(
     bind=engine,
     autoflush=False,
-    autocommit=False,
-    expire_on_commit=False,  # evita lazy-load após commit
+    expire_on_commit=False,
+    class_=AsyncSession,
 )
 
 
-# ── Base declarativa (todos os models herdam daqui) ────────────────────────────
 class Base(DeclarativeBase):
     pass
 
 
-# ── Dependency de injeção para o FastAPI ───────────────────────────────────────
-def get_db() -> Generator[Session, None, None]:
-    db: Session = SessionLocal()
-    try:
-        yield db
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with SessionLocal() as db:
+        try:
+            yield db
+        except Exception:
+            await db.rollback()
+            raise
