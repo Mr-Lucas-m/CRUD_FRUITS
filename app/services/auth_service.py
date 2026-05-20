@@ -1,5 +1,6 @@
 import structlog
-from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import EmailAlreadyRegisteredError, InvalidCredentialsError
 from app.core.security import (
@@ -15,17 +16,17 @@ from app.schemas.auth import LoginRequest, TokenResponse, UserCreate, UserRespon
 logger = structlog.get_logger()
 
 
-def register(db: Session, data: UserCreate) -> UserResponse:
-    if user_repository.get_user_by_email(db, data.email):
+async def register(db: AsyncSession, data: UserCreate) -> UserResponse:
+    if await user_repository.get_user_by_email(db, data.email):
         raise EmailAlreadyRegisteredError(data.email)
     hashed = hash_password(data.password)
-    user = user_repository.create_user(db, data.email, hashed)
+    user = await user_repository.create_user(db, data.email, hashed)
     logger.info("user_registered", user_id=user.id, email=user.email)
     return UserResponse.model_validate(user)
 
 
-def login(db: Session, data: LoginRequest) -> TokenResponse:
-    user = user_repository.get_user_by_email(db, data.email)
+async def login(db: AsyncSession, data: LoginRequest) -> TokenResponse:
+    user = await user_repository.get_user_by_email(db, data.email)
     if not user or not verify_password(data.password, user.hashed_password):
         raise InvalidCredentialsError()
     if not user.is_active:
@@ -36,9 +37,7 @@ def login(db: Session, data: LoginRequest) -> TokenResponse:
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 
-def refresh(db: Session, refresh_token: str) -> TokenResponse:
-    from fastapi import HTTPException, status
-
+async def refresh(db: AsyncSession, refresh_token: str) -> TokenResponse:
     payload = verify_token(refresh_token, "refresh")
     user_id: str | None = payload.get("sub")
     if not user_id:
@@ -47,7 +46,7 @@ def refresh(db: Session, refresh_token: str) -> TokenResponse:
             detail="Token inválido.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    user = user_repository.get_user_by_id(db, user_id)
+    user = await user_repository.get_user_by_id(db, user_id)
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query, Request, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
@@ -20,8 +20,10 @@ router = APIRouter(prefix="/categories", tags=["Categorias"], dependencies=[Depe
     summary="Criar categoria",
 )
 @limiter.limit("30/minute")
-def create(request: Request, data: CategoryCreate, db: Session = Depends(get_db)) -> CategoryResponse:
-    return category_service.create_category(db, data)
+async def create(
+    request: Request, data: CategoryCreate, db: AsyncSession = Depends(get_db)
+) -> CategoryResponse:
+    return await category_service.create_category(db, data)
 
 
 # ── GET /categories
@@ -30,12 +32,12 @@ def create(request: Request, data: CategoryCreate, db: Session = Depends(get_db)
     response_model=CategoryListResponse,
     summary="Listar categorias (paginado)",
 )
-def list_all(
+async def list_all(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ) -> CategoryListResponse:
-    return category_service.list_categories(db, page=page, page_size=page_size)
+    return await category_service.list_categories(db, page=page, page_size=page_size)
 
 
 # ── GET /categories/{id}
@@ -44,8 +46,8 @@ def list_all(
     response_model=CategoryResponse,
     summary="Buscar categoria por ID",
 )
-def get_one(category_id: str, db: Session = Depends(get_db)) -> CategoryResponse:
-    return category_service.get_category(db, category_id)
+async def get_one(category_id: str, db: AsyncSession = Depends(get_db)) -> CategoryResponse:
+    return await category_service.get_category(db, category_id)
 
 
 # ── PATCH /categories/{id}
@@ -55,13 +57,13 @@ def get_one(category_id: str, db: Session = Depends(get_db)) -> CategoryResponse
     summary="Atualizar categoria (parcial)",
 )
 @limiter.limit("30/minute")
-def update(
+async def update(
     request: Request,
     category_id: str,
     data: CategoryUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ) -> CategoryResponse:
-    return category_service.update_category(db, category_id, data)
+    return await category_service.update_category(db, category_id, data)
 
 
 # ── DELETE /categories/{id}
@@ -71,8 +73,10 @@ def update(
     summary="Remover categoria",
 )
 @limiter.limit("30/minute")
-def delete(request: Request, category_id: str, db: Session = Depends(get_db)) -> None:
-    category_service.delete_category(db, category_id)
+async def delete(
+    request: Request, category_id: str, db: AsyncSession = Depends(get_db)
+) -> None:
+    await category_service.delete_category(db, category_id)
 
 
 # ── GET /categories/{id}/fruits
@@ -81,10 +85,12 @@ def delete(request: Request, category_id: str, db: Session = Depends(get_db)) ->
     response_model=FruitListResponse,
     summary="Listar frutas de uma categoria",
 )
-def list_fruits(
+async def list_fruits(
     category_id: str,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ) -> FruitListResponse:
-    return category_service.list_category_fruits(db, category_id, page=page, page_size=page_size)
+    return await category_service.list_category_fruits(
+        db, category_id, page=page, page_size=page_size
+    )

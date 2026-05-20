@@ -4,7 +4,7 @@ import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
@@ -51,9 +51,9 @@ def verify_token(token: str, token_type: str = "access") -> dict:
         raise credentials_exception
 
 
-def get_current_user(
+async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     from app.repositories.user_repository import get_user_by_id
 
@@ -65,7 +65,7 @@ def get_current_user(
             detail="Token inválido.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    user = get_user_by_id(db, user_id)
+    user = await get_user_by_id(db, user_id)
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

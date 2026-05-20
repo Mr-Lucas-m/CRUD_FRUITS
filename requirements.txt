@@ -3,9 +3,11 @@ fastapi==0.115.12
 uvicorn[standard]==0.34.0
 
 # Database
-sqlalchemy==2.0.40
+sqlalchemy[asyncio]==2.0.40
 alembic==1.15.2
-psycopg2-binary==2.9.10
+psycopg2-binary==2.9.10  # usado apenas pelo Alembic (driver sync)
+asyncpg==0.30.0
+aiosqlite==0.20.0  # SQLite async para testes
 
 # Settings e validação
 pydantic==2.11.1
